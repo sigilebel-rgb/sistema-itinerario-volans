@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="app-version" content="v51-2026-06-30">
 <title>SALA DE CONTROL — Flota Condor Service · v44 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -4552,11 +4556,36 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // ── MOSTRAR OVERLAY DE LOGIN AL CARGAR ──────────────────────────────────
-window.addEventListener('load', () => {
-  const overlay = document.getElementById('loginOverlay');
-  if (overlay) overlay.style.display = 'flex';
-  document.getElementById('pinInput')?.focus();
-});
+// ── AUTO-ACTUALIZACIÓN: detecta nueva versión y fuerza recarga ─────────────
+// Compara la versión declarada en el meta tag de ESTA pestaña vs. la versión
+// publicada actualmente en el index.html del servidor. Si difieren, recarga
+// automáticamente (con cache-buster) para que el usuario nunca quede en una
+// versión vieja por caché del navegador.
+(function(){
+  const CURRENT_VERSION = document.querySelector('meta[name="app-version"]')?.content || '';
+  if(!CURRENT_VERSION) return;
+
+  async function checkForUpdate(){
+    try{
+      const res = await fetch(window.location.pathname + '?_=' + Date.now(), {cache:'no-store'});
+      if(!res.ok) return;
+      const txt = await res.text();
+      const m = txt.match(/<meta name="app-version" content="([^"]+)"/);
+      const serverVersion = m ? m[1] : null;
+      if(serverVersion && serverVersion !== CURRENT_VERSION){
+        console.log('Nueva versión detectada ('+serverVersion+'), recargando...');
+        window.location.reload(true);
+      }
+    }catch(e){ /* sin conexión o CORS, ignorar silenciosamente */ }
+  }
+
+  // Chequear al volver a la pestaña (cuando el usuario regresa después de un rato)
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') checkForUpdate();
+  });
+  // Chequear cada 10 minutos mientras la pestaña esté abierta
+  setInterval(checkForUpdate, 10 * 60 * 1000);
+})();
 
 </script>
 </body>
