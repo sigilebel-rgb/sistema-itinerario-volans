@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v53 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v54 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -422,7 +422,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
   border-radius:4px;padding:3px 8px;font-family:'Share Tech Mono',monospace;
   font-size:8px;color:#f4a261;letter-spacing:1px;flex-shrink:0;display:none;
 }
-/* ═══ PATCH v53: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
+/* ═══ PATCH v54: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
 #sb{width:540px;flex:0 0 540px}
 /* Encabezados y controles superiores mínimos (ganar espacio vertical) */
 .vselector{padding:2px 10px}
@@ -447,6 +447,12 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 /* Barra de progreso inferior más delgada */
 .progbar{padding:3px 12px}
 .plbls{margin-bottom:2px}
+/* Scrollbar ancha y agarrable con el mouse */
+.panel::-webkit-scrollbar{width:12px}
+.panel::-webkit-scrollbar-track{background:rgba(6,13,26,.8);border-radius:6px}
+.panel::-webkit-scrollbar-thumb{background:#0077b6;border-radius:6px;border:2px solid #0a1628;min-height:40px}
+.panel::-webkit-scrollbar-thumb:hover{background:#00b4d8}
+.panel::-webkit-scrollbar-thumb:active{background:#00d4f8}
 </style>
 </head>
 <body>
@@ -471,7 +477,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v53 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v54 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
