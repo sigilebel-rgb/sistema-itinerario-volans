@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v54 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v55 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -422,7 +422,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
   border-radius:4px;padding:3px 8px;font-family:'Share Tech Mono',monospace;
   font-size:8px;color:#f4a261;letter-spacing:1px;flex-shrink:0;display:none;
 }
-/* ═══ PATCH v54: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
+/* ═══ PATCH v55: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
 #sb{width:540px;flex:0 0 540px}
 /* Encabezados y controles superiores mínimos (ganar espacio vertical) */
 .vselector{padding:2px 10px}
@@ -477,7 +477,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v54 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v55 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
@@ -915,6 +915,9 @@ const PORT_COORDS = {
   'malaga':{lat:36.710,lon:-4.420,c:'España'},
   'palma de mallorca':{lat:39.560,lon:2.630,c:'España'},
   'las palmas':{lat:28.140,lon:-15.410,c:'España'},
+  'islas canarias':{lat:28.140,lon:-15.410,c:'España'},
+  'canarias':{lat:28.140,lon:-15.410,c:'España'},
+  'las palmas canarias':{lat:28.140,lon:-15.410,c:'España'},
   'santa cruz de tenerife':{lat:28.470,lon:-16.240,c:'España'},
   'lisboa':{lat:38.700,lon:-9.180,c:'Portugal'},
   'leixoes':{lat:41.180,lon:-8.700,c:'Portugal'},
