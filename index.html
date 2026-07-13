@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v55 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v56 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -423,6 +423,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
   font-size:8px;color:#f4a261;letter-spacing:1px;flex-shrink:0;display:none;
 }
 /* ═══ PATCH v55: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
+/* ═══ PATCH v56: loader Excel anclado por etiquetas — itinerarios extendidos a 41 escalas (master v2) ═══ */
 #sb{width:540px;flex:0 0 540px}
 /* Encabezados y controles superiores mínimos (ganar espacio vertical) */
 .vselector{padding:2px 10px}
@@ -477,7 +478,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v55 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v56 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
@@ -1703,12 +1704,24 @@ function loadExcel(ev){
             if(rp.length>=2){const rn=rp[1].trim(); if(rn && !/^nave\s*\d+$/i.test(rn)) vname=rn;}
           }
 
-          // ── PUERTOS (filas 8-41 = rows[7-40]) ───────────────────────────
+          // ── LOCALIZADOR DE BLOQUES (robusto a corrimiento de filas) ────
+          // Busca etiquetas en vez de filas fijas: sobrevive a itinerarios extendidos
+          const findRow=(ci,txt,from,to)=>{
+            for(let r=from;r<Math.min(to,rows.length);r++){
+              if(String(rows[r]?.[ci]||'').toLowerCase().includes(txt)) return r;
+            }
+            return -1;
+          };
+          const totIdx = findRow(0,'totales del viaje',8,90);   // fila TOTALES (col A)
+          const cbase  = findRow(13,'port cost',Math.max(totIdx,8),90); // fila 'Port cost' (col N)
+          const portEnd= totIdx>0 ? totIdx : 49;                // master v2: itinerario 8-48
+
+          // ── PUERTOS (filas 8 hasta TOTALES = rows[7..portEnd-1]) ────────
           // col C(2)=puerto, D(3)=ETA, E(4)=ETB, F(5)=ETD, J(9)=dist_NM
           // col L(11)=obs, M(12)=ini_MGO, N(13)=ini_VLSO
           // col O(14)=cons_MGO, P(15)=cons_VLSO, Q(16)=ROB_MGO, R(17)=ROB_VLSO
           const xlPorts=[];
-          for(let r=7; r<42 && r<rowsRaw.length; r++){
+          for(let r=7; r<portEnd && r<rowsRaw.length; r++){
             const row=rowsRaw[r]||[];
             const rTxt=rows[r]||[];
             const nm=String(row[2]||'').trim();
@@ -1738,26 +1751,28 @@ function loadExcel(ev){
             });
           }
 
-          // ── COSTOS (filas 47-52 = rows[46-51], col O = idx 14) ──────────
+          // ── COSTOS (anclados a fila 'Port cost' en col N; master v2: filas 54-59)
           const _n=(ri,ci)=>{ const v=rowsRaw[ri]?.[ci]; const v2=rows[ri]?.[ci]; return _parseNum(v)||_parseNum(v2); };
-          const portCost = _n(46,14);   // F47 col O
-          const navCost  = _n(47,14);   // F48
-          const manCost  = _n(48,14);   // F49
-          const mgoCost  = _n(49,14);   // F50
-          const vlsoCost = _n(50,14);   // F51
-          const totalCost= _n(51,14);   // F52
-          // ── PDA / FDA totales (filas 53-57 = rows[52-56], col O = idx 14) ─
-          const pdaTotal  = _n(52,14);  // F53
-          const fdaTotal  = _n(53,14);  // F54
-          const diffTotal = _n(54,14);  // F55
-          const totalPda  = _n(55,14);  // F56
-          const totalFda  = _n(56,14);  // F57
+          const cb = cbase>0 ? cbase : 53;   // fallback: fila 54 (idx 53) en master v2
+          const portCost = _n(cb,  14);   // Port cost        (O54)
+          const navCost  = _n(cb+1,14);   // Navigation cost  (O55)
+          const manCost  = _n(cb+2,14);   // Maneuvering cost (O56)
+          const mgoCost  = _n(cb+3,14);   // MGO Cost         (O57)
+          const vlsoCost = _n(cb+4,14);   // VLSO Cost        (O58)
+          const totalCost= _n(cb+5,14);   // TOTAL VOYAGE     (O59)
+          // ── PDA / FDA totales (siguen al TOTAL; master v2: filas 60-64) ──
+          const pdaTotal  = _n(cb+6,14);  // PDA Total  (O60)
+          const fdaTotal  = _n(cb+7,14);  // FDA Total  (O61)
+          const diffTotal = _n(cb+8,14);  // Δ FDA−PDA  (O62)
+          const totalPda  = _n(cb+9,14);  // Total+PDA  (O63)
+          const totalFda  = _n(cb+10,14); // Total+FDA  (O64)
 
-          // ── TOTALES COMBUSTIBLE (fila 44 = rows[43]) ────────────────────
-          const totMgo  = _n(43,14);   // F44 col O
-          const totVlso = _n(43,15);   // F44 col P
-          const portDays= _n(43,6);    // F44 col G
-          const navDays = _n(43,8);    // F44 col I
+          // ── TOTALES COMBUSTIBLE (fila siguiente a TOTALES; master v2: fila 51)
+          const ftIdx   = totIdx>0 ? totIdx+1 : 50;
+          const totMgo  = _n(ftIdx,14);   // col O
+          const totVlso = _n(ftIdx,15);   // col P
+          const portDays= _n(ftIdx,6);    // col G
+          const navDays = _n(ftIdx,8);    // col I
 
           // ── DETECTAR SI ES COPIA DE PLANTILLA (sin datos reales) ────────
           // Una hoja es plantilla si su primer puerto tiene ETA = 28 Feb 2026
