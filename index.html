@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v58 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v59 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -523,7 +523,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v58 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v59 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
@@ -542,6 +542,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
   <button id="btnVincular" onclick="document.getElementById('fileIn').click()" style="background:linear-gradient(135deg,#1d6a2a,#217a33);border:1px solid #2ecc71;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0;display:none">📊 VINCULAR EXCEL</button>
   <button id="btnTestCloud" onclick="testCloud()" style="background:rgba(244,162,97,.15);border:1px solid #f4a261;color:#f4a261;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0;display:none">🔍 TEST NUBE</button>
   <button id="btnGuardar" onclick="pushToCloud()" style="background:linear-gradient(135deg,#0a3a6a,#0d4a8a);border:1px solid #00b4d8;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0;display:none">☁ GUARDAR NUBE</button>
+  <button onclick="openCoastalChooser()" style="background:linear-gradient(135deg,#6e3a0d,#b66a00);border:1px solid #f4a261;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0">📋 COASTAL SCHEDULE</button>
   <button onclick="openFleetReport()" style="background:linear-gradient(135deg,#0d3a6e,#0077b6);border:1px solid #00b4d8;color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:1px;flex-shrink:0">📄 INFORME FLOTA PDF</button>
 </div>
 <div class="vselector" id="vSelector"><button class="vbtn all-btn active" onclick="selectVessel(-1)">🌐 TODAS LAS NAVES</button></div>
@@ -1619,6 +1620,12 @@ function buildSidebarAll(){
       tg.className='vp-toggle';
       tg.textContent='▾ ESCALAS ('+pts.length+')';
       hdr.appendChild(tg);
+      const csb=document.createElement('div');
+      csb.className='vp-toggle';
+      csb.style.color='#f4a261';
+      csb.textContent='📋 COASTAL SCHEDULE';
+      csb.addEventListener('click',ev=>{ev.stopPropagation();openCoastalSchedule(vi);});
+      hdr.appendChild(csb);
       tabP.appendChild(hdr);
       recalcPortStatus(pts);
       const pl=document.createElement('div');
@@ -3968,6 +3975,123 @@ window.loadExcel = loadExcel;  // expose to global scope explicitly
   }
 })();
 
+
+// ═══ PATCH v59: COASTAL SCHEDULE imprimible por nave (formato oficial) ═══
+function openCoastalSchedule(vi){
+  var v=VESSELS[vi]; if(!v) return;
+  var pts=v.ports||[];
+  if(!pts.length){alert('Esta nave no tiene itinerario cargado.');return;}
+  var today=new Date();
+  var fdt=String(today.getDate()).padStart(2,'0')+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+today.getFullYear();
+  // Datos editables guardados por nave
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem('cs_'+v.sheet)||'{}');}catch(e){}
+  function sv(k,def){return (saved[k]!==undefined&&saved[k]!=='')?saved[k]:def;}
+  var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function fLong(d){if(!d)return '';return DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+  function fShort(d){if(!d)return '';return String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+  var rows=pts.map(function(p){
+    var eta=_pd(p.eta), etb=_pd(p.etb), etd=_pd(p.etd);
+    var waitD=(eta&&etb)?Math.max(0,(etb-eta)/864e5):0;
+    var opsH=(etb&&etd)?Math.max(0,Math.round((etd-etb)/36e5)):0;
+    return '<tr>'+
+      '<td class="pn" contenteditable="true">'+p.n+'</td>'+
+      '<td contenteditable="true">'+(eta?fLong(eta):(p.eta||''))+'</td>'+
+      '<td class="ct" contenteditable="true">'+(waitD>0?waitD.toFixed(1).replace('.',','):'')+'</td>'+
+      '<td class="ct" contenteditable="true">'+(etb?fShort(etb):(p.etb||''))+'</td>'+
+      '<td class="ct" contenteditable="true">'+(opsH||'')+'</td>'+
+      '<td class="ct" contenteditable="true">'+(etd?fShort(etd):'')+'</td>'+
+      '<td class="ct" contenteditable="true">2</td>'+
+      '<td contenteditable="true">'+(etd?fLong(etd):(p.etd||''))+'</td>'+
+      '<td class="rmk" contenteditable="true">'+String(p.obs||'').replace(/</g,'&lt;')+'</td>'+
+      '</tr>';
+  }).join('');
+  var vname=v.name.toUpperCase();
+  var htmlDoc='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+vname+' '+v.voyage+' — Coastal Schedule</title>'+
+  '<style>'+
+  'body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:24px;font-size:11px}'+
+  '.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}'+
+  '.btns button{background:#0077b6;color:#fff;border:none;padding:7px 16px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;margin-left:6px}'+
+  '.btns button.gr{background:#1d6a2a}'+
+  'h1{font-size:17px;letter-spacing:1px;margin:0 0 2px;text-align:center}'+
+  '.subt{text-align:center;font-size:10px;color:#555;margin-bottom:12px}'+
+  'table.hd{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10.5px}'+
+  'table.hd td{padding:2.5px 6px;border:1px solid #bbb;vertical-align:middle}'+
+  'table.hd td.k{background:#eef3f8;font-weight:700;width:130px;white-space:nowrap}'+
+  '[contenteditable]{outline:none}'+
+  '[contenteditable]:hover{background:#fffbe0}'+
+  '[contenteditable]:focus{background:#fff3bf}'+
+  'table.sc{width:100%;border-collapse:collapse;font-size:9.5px}'+
+  'table.sc th{background:#0d3a6e;color:#fff;padding:4px 4px;border:1px solid #0d3a6e;font-size:8.5px;letter-spacing:.3px}'+
+  'table.sc td{border:1px solid #999;padding:3px 4px;vertical-align:middle}'+
+  'table.sc td.pn{font-weight:700;white-space:nowrap}'+
+  'table.sc td.ct{text-align:center;white-space:nowrap}'+
+  'table.sc td.rmk{min-width:130px}'+
+  'table.sc tr:nth-child(even) td{background:#f4f7fa}'+
+  '.foot{margin-top:14px;font-size:9px;color:#777;display:flex;justify-content:space-between}'+
+  '.hint{font-size:9px;color:#0077b6;margin:6px 0 10px}'+
+  '@media print{.btns,.hint{display:none!important}body{margin:8mm}[contenteditable]:hover,[contenteditable]:focus{background:transparent}}'+
+  '</style></head><body>'+
+  '<div class="topbar"><div class="hint">✏️ Todos los campos amarillos al pasar el mouse son editables. GUARDAR conserva los datos del buque para el próximo reporte.</div>'+
+  '<div class="btns"><button class="gr" onclick="saveCS()">💾 GUARDAR</button><button onclick="window.print()">🖨 IMPRIMIR / PDF</button></div></div>'+
+  '<h1>'+vname+' '+v.voyage+'</h1>'+
+  '<div class="subt">CONDOR SERVICE · VOLANS MARITIME GROUP — COASTAL SCHEDULE</div>'+
+  '<table class="hd">'+
+  '<tr><td class="k">DATE</td><td id="f_date" contenteditable="true">'+sv('date',fdt)+'</td>'+
+      '<td class="k">REF</td><td id="f_ref" contenteditable="true">'+sv('ref','COASTAL SCHEDULE')+'</td></tr>'+
+  '<tr><td class="k">VOYAGE</td><td>'+v.voyage+'</td>'+
+      '<td class="k">VCS CODE</td><td id="f_vcs" contenteditable="true">'+sv('vcs','')+'</td></tr>'+
+  '<tr><td class="k">NAME OF MASTER</td><td id="f_master" contenteditable="true">'+sv('master','')+'</td>'+
+      '<td class="k">CALL SIGNAL</td><td id="f_call" contenteditable="true">'+sv('call','')+'</td></tr>'+
+  '<tr><td class="k">FLAG</td><td id="f_flag" contenteditable="true">'+sv('flag','')+'</td>'+
+      '<td class="k">EMAIL MASTER</td><td id="f_email" contenteditable="true">'+sv('email','')+'</td></tr>'+
+  '<tr><td class="k">REG. / IMO NUMBER</td><td id="f_imo" contenteditable="true">'+sv('imo','')+'</td>'+
+      '<td class="k">SPEED (kn)</td><td id="f_speed" contenteditable="true">'+sv('speed',String(v.speed).replace('.',','))+'</td></tr>'+
+  '</table>'+
+  '<table class="sc"><thead><tr>'+
+  '<th style="text-align:left">PORT</th><th>ETA</th><th>WAITING<br>(days)</th><th>START OPS</th><th>OPER<br>(hours)</th><th>FINISH OPS</th><th>UNBERTH<br>MAN (h)</th><th>ETS</th><th style="text-align:left">REMARKS</th>'+
+  '</tr></thead><tbody>'+rows+'</tbody></table>'+
+  '<div class="foot"><span>Generado por Sala de Control · '+fdt+'</span><span>'+vname+' · Voyage '+v.voyage+'</span></div>'+
+  '<scr'+'ipt>'+
+  'function saveCS(){var o={date:g("f_date"),ref:g("f_ref"),vcs:g("f_vcs"),master:g("f_master"),call:g("f_call"),flag:g("f_flag"),email:g("f_email"),imo:g("f_imo"),speed:g("f_speed")};'+
+  'try{localStorage.setItem("cs_'+v.sheet+'",JSON.stringify(o));alert("✅ Datos del buque guardados. Se cargarán automáticamente en el próximo reporte.");}catch(e){alert("No se pudo guardar: "+e.message);}}'+
+  'function g(id){var e=document.getElementById(id);return e?e.textContent.trim():"";}'+
+  '</scr'+'ipt>'+
+  '</body></html>';
+  var win=window.open('','_blank','width=1150,height=850,scrollbars=yes,toolbar=yes,menubar=yes');
+  if(win&&!win.closed){win.document.write(htmlDoc);win.document.close();win.focus();}
+  else{
+    var ov=document.getElementById('csModal');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='csModal';
+      ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;flex-direction:column';
+      ov.innerHTML='<div style="background:#0d1e35;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">'+
+        '<span style="font-family:Orbitron,monospace;font-size:10px;color:#00b4d8;letter-spacing:2px">📋 COASTAL SCHEDULE</span>'+
+        '<button onclick="document.getElementById(\'csModal\').remove()" style="background:#e74c3c;border:none;color:#fff;padding:4px 12px;border-radius:3px;cursor:pointer">✕ CERRAR</button>'+
+        '</div><iframe id="csFrame" style="flex:1;border:none;background:#fff"></iframe>';
+      document.body.appendChild(ov);
+    }
+    document.getElementById('csFrame').srcdoc=htmlDoc;
+    ov.style.display='flex';
+  }
+}
+function openCoastalChooser(){
+  if(activeVessel>=0){openCoastalSchedule(activeVessel);return;}
+  var ov=document.getElementById('csChooser');
+  if(ov){ov.remove();}
+  ov=document.createElement('div'); ov.id='csChooser';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center';
+  var box='<div style="background:#0d1e35;border:1px solid #00b4d8;border-radius:8px;padding:18px 22px;min-width:280px">'+
+    '<div style="font-family:Orbitron,monospace;font-size:10px;color:#00b4d8;letter-spacing:2px;margin-bottom:12px">📋 COASTAL SCHEDULE — ELEGIR NAVE</div>';
+  VESSELS.forEach(function(v,i){
+    box+='<button onclick="document.getElementById(\'csChooser\').remove();openCoastalSchedule('+i+')" style="display:block;width:100%;margin-bottom:6px;background:rgba(0,180,216,.1);border:1px solid #1a3a5c;color:#cce7ff;padding:8px;border-radius:4px;cursor:pointer;font-family:\'Share Tech Mono\',monospace;font-size:10px;text-align:left">⚓ '+v.name+' · Voyage '+v.voyage+'</button>';
+  });
+  box+='<button onclick="document.getElementById(\'csChooser\').remove()" style="display:block;width:100%;margin-top:6px;background:transparent;border:1px solid #5a7fa0;color:#5a7fa0;padding:6px;border-radius:4px;cursor:pointer;font-size:9px">CANCELAR</button></div>';
+  ov.innerHTML=box;
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
+}
 
 // ── INFORME FLOTA PDF ──────────────────────────────────────────────────────
 function openFleetReport(){
