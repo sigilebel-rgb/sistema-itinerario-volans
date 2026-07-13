@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v56 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v57 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -424,6 +424,39 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 }
 /* ═══ PATCH v55: sidebar 540px + compactación fuerte = más puertos visibles ═══ */
 /* ═══ PATCH v56: loader Excel anclado por etiquetas — itinerarios extendidos a 41 escalas (master v2) ═══ */
+/* ═══ PATCH v57: MATRIZ FLOTA — puertos × naves con ETA/ETB/ETD + obs ═══ */
+#mtzOverlay{display:none;position:fixed;inset:0;background:rgba(3,8,16,.94);z-index:9500;backdrop-filter:blur(3px);padding:18px}
+#mtzBox{width:100%;height:100%;background:#0a1628;border:1px solid #0077b6;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 40px rgba(0,180,216,.25)}
+.mtz-hdr{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 14px;background:#0d1e35;border-bottom:1px solid #0077b6}
+.mtz-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:#00b4d8;letter-spacing:2px;flex:1}
+.mtz-srch{background:#060d1a;border:1px solid #1a3a5c;border-radius:4px;padding:4px 9px;color:#cce7ff;font-family:'Share Tech Mono',monospace;font-size:10px;outline:none;width:180px}
+.mtz-srch:focus{border-color:#00b4d8}
+.mtz-close{cursor:pointer;color:#5a7fa0;font-size:16px;padding:2px 8px;border:1px solid #1a3a5c;border-radius:4px}
+.mtz-close:hover{color:#e74c3c;border-color:#e74c3c}
+.mtz-scroll{flex:1 1 0;overflow:auto}
+.mtz-scroll::-webkit-scrollbar{width:6px;height:6px}
+.mtz-scroll::-webkit-scrollbar-thumb{background:#0077b6;border-radius:3px}
+.mtz-tbl{border-collapse:separate;border-spacing:0;font-size:9px;min-width:100%}
+.mtz-tbl th{position:sticky;top:0;z-index:3;background:#0d1e35;color:#00b4d8;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1px;padding:6px 8px;border-bottom:2px solid #0077b6;border-right:1px solid #1a3a5c;text-align:left;white-space:nowrap}
+.mtz-tbl th.mtz-vsl{min-width:170px}
+.mtz-tbl th:first-child,.mtz-tbl td:first-child{position:sticky;left:0;z-index:2;background:#0d1e35;border-right:2px solid #0077b6}
+.mtz-tbl th:first-child{z-index:4}
+.mtz-port{font-family:'Orbitron',monospace;font-size:9.5px;font-weight:700;color:#cce7ff;white-space:nowrap;padding:5px 9px!important}
+.mtz-tbl td{padding:4px 7px;border-bottom:1px solid rgba(26,58,92,.4);border-right:1px solid rgba(26,58,92,.3);vertical-align:top;font-family:'Share Tech Mono',monospace}
+.mtz-tbl tr:hover td{background:rgba(0,180,216,.05)}
+.mtz-tbl tr:hover td:first-child{background:#12294a}
+.mtz-call{margin-bottom:4px;padding:3px 5px;background:rgba(0,180,216,.05);border-left:2px solid #1a3a5c;border-radius:2px}
+.mtz-call:last-child{margin-bottom:0}
+.mtz-call.mc-past{border-left-color:#2ecc71;opacity:.75}
+.mtz-call.mc-next{border-left-color:#f4a261;background:rgba(244,162,97,.08)}
+.mtz-call.mc-fut{border-left-color:#00b4d8}
+.mtz-dt{display:flex;gap:7px;white-space:nowrap}
+.mtz-dt b{color:#5a7fa0;font-weight:400;font-size:7px}
+.mtz-dt span{color:#cce7ff;font-size:8.5px}
+.mtz-obs{margin-top:2px;color:#f4a261;font-size:8px;line-height:1.35;max-width:200px;white-space:normal}
+.mtz-dash{color:#2a4060;text-align:center}
+.mtz-cnt{font-size:8px;color:#5a7fa0;font-family:'Share Tech Mono',monospace;letter-spacing:0}
+.mtz-voy{display:block;font-size:7.5px;color:#5a7fa0;letter-spacing:.5px;font-family:'Share Tech Mono',monospace}
 #sb{width:540px;flex:0 0 540px}
 /* Encabezados y controles superiores mínimos (ganar espacio vertical) */
 .vselector{padding:2px 10px}
@@ -478,7 +511,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v56 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v57 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
@@ -726,6 +759,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
     </div>
 
     <div class="mctrl">
+      <button class="mbtn" onclick="togMatriz()">🧾 MATRIZ FLOTA</button>
       <button class="mbtn" onclick="fitAll()">⊕ VISTA GLOBAL</button>
       <button class="mbtn on" id="btnRuta" onclick="togRuta()">🗺 RUTAS</button>
       <button class="mbtn" id="btnWPE" onclick="togWPE()">✏ EDITAR WAYPOINTS</button>
@@ -4606,6 +4640,92 @@ window.addEventListener('load', () => {
   if (overlay) overlay.style.display = 'flex';
   document.getElementById('pinInput')?.focus();
 });
+
+// ═══════════════ PATCH v57: MATRIZ FLOTA (puertos × naves) ═══════════════
+// Vista de solo lectura construida desde VESSELS[] — no toca datos ni sync.
+function _mtzParseDate(s){
+  if(!s || s==='—') return null;
+  const mo={ene:0,feb:1,mar:2,abr:3,may:4,jun:5,jul:6,ago:7,sep:8,oct:9,nov:10,dic:11};
+  const m=String(s).match(/(\d+)\s+(\w+)\s+(\d+):(\d+)/);
+  if(!m) return null;
+  const k=m[2].toLowerCase().slice(0,3);
+  if(!(k in mo)) return null;
+  return new Date(2026,mo[k],+m[1],+m[3],+m[4]);
+}
+function _mtzEnsureDom(){
+  if(document.getElementById('mtzOverlay')) return;
+  const d=document.createElement('div');
+  d.id='mtzOverlay';
+  d.innerHTML='<div id="mtzBox">'+
+    '<div class="mtz-hdr">'+
+      '<span class="mtz-title">🧾 MATRIZ FLOTA · PUERTOS × NAVES</span>'+
+      '<input class="mtz-srch" id="mtzSrch" placeholder="Filtrar puerto..." oninput="buildMatriz()">'+
+      '<span class="mtz-close" onclick="togMatriz()">✕</span>'+
+    '</div>'+
+    '<div class="mtz-scroll"><table class="mtz-tbl"><thead id="mtzHead"></thead><tbody id="mtzBody"></tbody></table></div>'+
+  '</div>';
+  document.body.appendChild(d);
+  d.addEventListener('click',e=>{ if(e.target===d) togMatriz(); });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && d.style.display==='block') togMatriz();
+  });
+}
+function togMatriz(){
+  _mtzEnsureDom();
+  const d=document.getElementById('mtzOverlay');
+  const show = d.style.display!=='block';
+  d.style.display = show?'block':'none';
+  if(show) buildMatriz();
+}
+function buildMatriz(){
+  const head=document.getElementById('mtzHead');
+  const body=document.getElementById('mtzBody');
+  if(!head||!body) return;
+  const q=(document.getElementById('mtzSrch')?.value||'').toLowerCase().trim();
+  const fleet=VESSELS.filter(v=>v.hasData!==false && v.ports && v.ports.length);
+  const now=new Date();
+
+  // Cabecera: PUERTO + naves
+  head.innerHTML='<tr><th>PUERTO</th>'+fleet.map(v=>
+    '<th class="mtz-vsl">⚓ '+v.name.toUpperCase()+'<span class="mtz-voy">VOY '+(v.voyage||'—')+' · '+v.ports.length+' escalas</span></th>'
+  ).join('')+'</tr>';
+
+  // Unión de puertos (clave normalizada sin acentos) + fecha mínima para ordenar
+  const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  const map=new Map(); // key -> {label, minEta, calls:[fleetIdx][..]}
+  fleet.forEach((v,vi)=>{
+    v.ports.forEach(p=>{
+      const k=norm(p.n);
+      if(!map.has(k)) map.set(k,{label:p.n, minEta:Infinity, calls:fleet.map(()=>[])});
+      const e=map.get(k);
+      e.calls[vi].push(p);
+      const dt=_mtzParseDate(p.eta);
+      if(dt && dt.getTime()<e.minEta) e.minEta=dt.getTime();
+    });
+  });
+
+  // Orden: primera ETA de la flota; sin fecha al final (alfabético)
+  const rows=[...map.values()]
+    .filter(e=>!q || norm(e.label).includes(q))
+    .sort((a,b)=> a.minEta!==b.minEta ? a.minEta-b.minEta : a.label.localeCompare(b.label));
+
+  body.innerHTML=rows.map(e=>{
+    const cells=e.calls.map(calls=>{
+      if(!calls.length) return '<td class="mtz-dash">—</td>';
+      return '<td>'+calls.map(p=>{
+        const eta=_mtzParseDate(p.eta), etd=_mtzParseDate(p.etd);
+        const cls = (etd&&etd<now) ? 'mc-past' : (eta&&eta<=now&&(!etd||etd>=now)) ? 'mc-next' : 'mc-fut';
+        const obs=String(p.obs||'').trim();
+        return '<div class="mtz-call '+cls+'">'+
+          '<div class="mtz-dt"><span><b>ETA</b> '+(p.eta||'—')+'</span><span><b>ETB</b> '+(p.etb||p.eta||'—')+'</span><span><b>ETD</b> '+(p.etd||'—')+'</span></div>'+
+          (obs?'<div class="mtz-obs">📋 '+obs.replace(/</g,'&lt;')+'</div>':'')+
+        '</div>';
+      }).join('')+'</td>';
+    }).join('');
+    const tot=e.calls.reduce((s,c)=>s+c.length,0);
+    return '<tr><td class="mtz-port">'+e.label.toUpperCase()+'<br><span class="mtz-cnt">'+tot+' recalada'+(tot!==1?'s':'')+'</span></td>'+cells+'</tr>';
+  }).join('') || '<tr><td colspan="'+(fleet.length+1)+'" style="padding:20px;text-align:center;color:#5a7fa0">Sin resultados</td></tr>';
+}
 
 </script>
 </body>
