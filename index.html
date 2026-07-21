@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SALA DE CONTROL — Flota Condor Service · v60 SYNC</title>
+<title>SALA DE CONTROL — Flota Condor Service · v62 SYNC</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -523,7 +523,7 @@ html,body{width:100%;height:100%;background:#060d1a;color:#cce7ff;font-family:'R
 <div id="hdr">
   <div style="flex-shrink:0">
     <div class="htitle">⚓ SALA DE CONTROL — FLOTA CONDOR SERVICE</div>
-    <div class="hsub">MULTI-NAVE · v60 · 3 naves activas · Excel sincroniza todo</div>
+    <div class="hsub">MULTI-NAVE · v62 · 3 naves activas · Excel sincroniza todo</div>
   </div>
   <div class="hpills">
     <div class="pill"><div class="pv"><span class="rdot"></span><span id="hStatus">EN TRÁNSITO</span></div><div class="pl">Estado Flota</div></div>
@@ -897,8 +897,13 @@ const PORT_COORDS = {
   'brunsbuttel':{lat:53.893,lon:9.132,c:'Alemania'},
   'brunsbüttel':{lat:53.893,lon:9.132,c:'Alemania'},
   'bridgetown':{lat:13.100,lon:-59.620,c:'Barbados'},
+  // ── Manzanillo RD (Pepillo Salcedo, Montecristi) ──
   'manzanillo do':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
-  'manzanillo':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
+  'manzanillo rd':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
+  'manzanillo dom':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
+  'manzanillo republica dominicana':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
+  'pepillo salcedo':{lat:19.700,lon:-71.750,c:'Rep. Dominicana'},
+  // 'manzanillo' a secas es AMBIGUO — ver AMBIGUOUS_PORTS
   'fort de france':{lat:14.600,lon:-61.080,c:'Martinica'},
   'fort-de-france':{lat:14.600,lon:-61.080,c:'Martinica'},
   'point a pitre':{lat:16.230,lon:-61.530,c:'Guadalupe'},
@@ -957,6 +962,11 @@ const PORT_COORDS = {
   'barcelona':{lat:41.350,lon:2.170,c:'España'},
   'tarragona':{lat:41.100,lon:1.250,c:'España'},
   'cartagena esp':{lat:37.600,lon:-0.990,c:'España'},
+  'cartagena col':{lat:10.390,lon:-75.481,c:'Colombia'},
+  'valencia ve':{lat:10.480,lon:-68.010,c:'Venezuela'},
+  'portland uk':{lat:50.570,lon:-2.440,c:'Reino Unido'},
+  'vancouver wa':{lat:45.630,lon:-122.670,c:'EEUU'},
+  'san nicolas peru':{lat:-15.767,lon:-75.233,c:'Perú'},
   'huelva':{lat:37.180,lon:-6.950,c:'España'},
   'cadiz':{lat:36.530,lon:-6.290,c:'España'},
   'sevilla':{lat:37.380,lon:-6.000,c:'España'},
@@ -1028,14 +1038,148 @@ const PORT_COORDS = {
   'terneuzen':{lat:51.330,lon:3.830,c:'Países Bajos'},
   'amsterdam':{lat:52.380,lon:4.900,c:'Países Bajos'},
   'ijmuiden':{lat:52.460,lon:4.600,c:'Países Bajos'},
+
+  // ══════ PATCH v61 — ARGENTINA / RÍO DE LA PLATA ══════
+  'zarate':{lat:-34.096,lon:-59.030,c:'Argentina'},
+  'campana':{lat:-34.163,lon:-58.958,c:'Argentina'},
+  'buenos aires':{lat:-34.600,lon:-58.370,c:'Argentina'},
+  'la plata':{lat:-34.870,lon:-57.890,c:'Argentina'},
+  'san nicolas de los arroyos':{lat:-33.330,lon:-60.220,c:'Argentina'},
+  'rosario':{lat:-32.930,lon:-60.640,c:'Argentina'},
+  'san lorenzo':{lat:-32.750,lon:-60.730,c:'Argentina'},
+  'bahia blanca':{lat:-38.780,lon:-62.270,c:'Argentina'},
+  'ingeniero white':{lat:-38.790,lon:-62.270,c:'Argentina'},
+  'mar del plata':{lat:-38.030,lon:-57.530,c:'Argentina'},
+  'quequen':{lat:-38.570,lon:-58.700,c:'Argentina'},
+  'necochea':{lat:-38.570,lon:-58.700,c:'Argentina'},
+  'san antonio este':{lat:-40.800,lon:-64.850,c:'Argentina'},
+  'puerto madryn':{lat:-42.740,lon:-65.030,c:'Argentina'},
+  'comodoro rivadavia':{lat:-45.860,lon:-67.470,c:'Argentina'},
+  'caleta cordova':{lat:-45.750,lon:-67.360,c:'Argentina'},
+  'caleta olivia':{lat:-46.430,lon:-67.520,c:'Argentina'},
+  'caleta paula':{lat:-46.430,lon:-67.520,c:'Argentina'},
+  'puerto deseado':{lat:-47.750,lon:-65.900,c:'Argentina'},
+  'rio gallegos':{lat:-51.620,lon:-69.020,c:'Argentina'},
+  'ushuaia':{lat:-54.810,lon:-68.300,c:'Argentina'},
+  'montevideo':{lat:-34.900,lon:-56.200,c:'Uruguay'},
+  'nueva palmira':{lat:-33.880,lon:-58.410,c:'Uruguay'},
+  'fray bentos':{lat:-33.120,lon:-58.310,c:'Uruguay'},
+
+  // ══════ CHILE / BRASIL adicionales ══════
+  'chacabuco':{lat:-45.470,lon:-72.820,c:'Chile'},
+  'puerto chacabuco':{lat:-45.470,lon:-72.820,c:'Chile'},
+  'porto do acu':{lat:-21.830,lon:-41.000,c:'Brasil'},
+  'maceio':{lat:-9.680,lon:-35.730,c:'Brasil'},
+  'cabedelo':{lat:-6.970,lon:-34.840,c:'Brasil'},
+
+  // ══════ CARIBE ══════
+  'kingston':{lat:17.970,lon:-76.800,c:'Jamaica'},
+  'port of spain':{lat:10.650,lon:-61.520,c:'Trinidad y Tobago'},
+  'point lisas':{lat:10.400,lon:-61.480,c:'Trinidad y Tobago'},
+  'willemstad':{lat:12.110,lon:-68.930,c:'Curazao'},
+  'curacao':{lat:12.110,lon:-68.930,c:'Curazao'},
+  'oranjestad':{lat:12.510,lon:-70.040,c:'Aruba'},
+  'aruba':{lat:12.510,lon:-70.040,c:'Aruba'},
+  'castries':{lat:14.010,lon:-60.990,c:'Santa Lucía'},
+  'roseau':{lat:15.300,lon:-61.390,c:'Dominica'},
+  'st johns':{lat:17.120,lon:-61.850,c:'Antigua'},
+  'basseterre':{lat:17.290,lon:-62.720,c:'San Cristóbal'},
+  'philipsburg':{lat:18.020,lon:-63.050,c:'Sint Maarten'},
+  'san juan':{lat:18.460,lon:-66.100,c:'Puerto Rico'},
+  'santo domingo':{lat:18.450,lon:-69.880,c:'Rep. Dominicana'},
+  'caucedo':{lat:18.420,lon:-69.630,c:'Rep. Dominicana'},
+  'rio haina':{lat:18.420,lon:-70.020,c:'Rep. Dominicana'},
+
+  // ══════ CENTROAMÉRICA / MÉXICO ══════
+  'puerto limon':{lat:10.000,lon:-83.030,c:'Costa Rica'},
+  'moin':{lat:10.020,lon:-83.080,c:'Costa Rica'},
+  'puerto caldera':{lat:9.910,lon:-84.720,c:'Costa Rica'},
+  'puerto cortes':{lat:15.830,lon:-87.950,c:'Honduras'},
+  'santo tomas de castilla':{lat:15.700,lon:-88.610,c:'Guatemala'},
+  'puerto quetzal':{lat:13.920,lon:-90.790,c:'Guatemala'},
+  'acajutla':{lat:13.570,lon:-89.840,c:'El Salvador'},
+  'corinto':{lat:12.480,lon:-87.170,c:'Nicaragua'},
+  'veracruz':{lat:19.200,lon:-96.130,c:'México'},
+  'altamira':{lat:22.500,lon:-97.870,c:'México'},
+  // ── Manzanillo MX (Colima, Pacífico) ──
+  'manzanillo mx':{lat:19.050,lon:-104.320,c:'México'},
+  'manzanillo mex':{lat:19.050,lon:-104.320,c:'México'},
+  'manzanillo mexico':{lat:19.050,lon:-104.320,c:'México'},
+  'manzanillo colima':{lat:19.050,lon:-104.320,c:'México'},
+  'lazaro cardenas':{lat:17.940,lon:-102.180,c:'México'},
+
+  // ══════ VENEZUELA / GUAYANAS ══════
+  'puerto cabello':{lat:10.480,lon:-68.010,c:'Venezuela'},
+  'la guaira':{lat:10.600,lon:-66.930,c:'Venezuela'},
+  'georgetown':{lat:6.820,lon:-58.170,c:'Guyana'},
+  'paramaribo':{lat:5.820,lon:-55.150,c:'Surinam'},
+  'degrad des cannes':{lat:4.860,lon:-52.280,c:'Guayana Francesa'},
+
+  // ══════ USA COSTA ESTE / GOLFO ══════
+  'houston':{lat:29.730,lon:-95.270,c:'EEUU'},
+  'freeport tx':{lat:28.950,lon:-95.310,c:'EEUU'},
+  'corpus christi':{lat:27.810,lon:-97.400,c:'EEUU'},
+  'new orleans':{lat:29.940,lon:-90.100,c:'EEUU'},
+  'mobile':{lat:30.690,lon:-88.040,c:'EEUU'},
+  'tampa':{lat:27.940,lon:-82.450,c:'EEUU'},
+  'miami':{lat:25.770,lon:-80.170,c:'EEUU'},
+  'port everglades':{lat:26.090,lon:-80.120,c:'EEUU'},
+  'jacksonville':{lat:30.390,lon:-81.610,c:'EEUU'},
+  'savannah':{lat:32.080,lon:-81.090,c:'EEUU'},
+  'charleston':{lat:32.780,lon:-79.920,c:'EEUU'},
+  'norfolk':{lat:36.870,lon:-76.320,c:'EEUU'},
+  'baltimore':{lat:39.260,lon:-76.580,c:'EEUU'},
+  'philadelphia':{lat:39.910,lon:-75.140,c:'EEUU'},
+  'new york':{lat:40.670,lon:-74.050,c:'EEUU'},
+  'boston':{lat:42.350,lon:-71.030,c:'EEUU'},
+
+  // ══════ USA / CANADÁ COSTA OESTE ══════
+  'los angeles':{lat:33.730,lon:-118.260,c:'EEUU'},
+  'long beach':{lat:33.750,lon:-118.210,c:'EEUU'},
+  'oakland':{lat:37.800,lon:-122.330,c:'EEUU'},
+  'portland oregon':{lat:45.590,lon:-122.760,c:'EEUU'},
+  'seattle':{lat:47.600,lon:-122.340,c:'EEUU'},
+  'tacoma':{lat:47.270,lon:-122.420,c:'EEUU'},
+  'vancouver bc':{lat:49.290,lon:-123.100,c:'Canadá'},
+
+  // ══════ ESTRECHOS / ÁFRICA OCCIDENTAL (escalas bunker) ══════
+  'gibraltar':{lat:36.140,lon:-5.360,c:'Gibraltar'},
+  'ceuta':{lat:35.890,lon:-5.310,c:'España'},
+  'casablanca':{lat:33.600,lon:-7.610,c:'Marruecos'},
+  'dakar':{lat:14.680,lon:-17.430,c:'Senegal'},
+  'mindelo':{lat:16.880,lon:-25.000,c:'Cabo Verde'},
 };
 
 function portKey(name){return String(name).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
 
+// ═══ PATCH v62: puertos homónimos ═══
+// Nombres que existen en 2+ países. Si el Excel los trae "a secas" NO se adivina:
+// se devuelve null y el nombre aparece en el aviso "⚠ Sin coordenadas" al vincular.
+// Regla: escribir el sufijo de país en la col C del Excel (ej. "Manzanillo MX").
+// Solo nombres SIN llave exacta en PORT_COORDS. La coincidencia exacta siempre
+// gana, así que 'cartagena'→Colombia, 'valencia'→España y 'san nicolas'→Perú
+// siguen funcionando como hasta ahora (retrocompatibilidad con el Excel actual);
+// para el otro homónimo se usa el sufijo: 'Cartagena ESP', 'Valencia VE',
+// 'San Nicolas de los Arroyos'.
+const AMBIGUOUS_PORTS = {
+  'manzanillo': ['Manzanillo RD (Rep. Dominicana, 19.70N/71.75W)','Manzanillo MX (Colima, 19.05N/104.32W)'],
+  'portland':   ['Portland Oregon (EEUU)','Portland UK (Reino Unido)'],
+  'vancouver':  ['Vancouver BC (Canadá)','Vancouver WA (EEUU)']
+};
+window._ambiguousHits = [];
+
 function lookupCoords(name){
   const k=portKey(name);
+  // 1) Coincidencia exacta — siempre gana
   if(PORT_COORDS[k]) return PORT_COORDS[k];
-  // Partial match
+  // 2) Homónimo sin sufijo de país → NO adivinar
+  if(Object.prototype.hasOwnProperty.call(AMBIGUOUS_PORTS,k) && AMBIGUOUS_PORTS[k]){
+    const opts=AMBIGUOUS_PORTS[k];
+    if(window._ambiguousHits.indexOf(name)<0) window._ambiguousHits.push(name);
+    console.warn('⚠ Puerto ambiguo "'+name+'". Especifica en el Excel: '+opts.join(' | '));
+    return null;
+  }
+  // 3) Coincidencia parcial
   for(const key of Object.keys(PORT_COORDS)){
     if(k.includes(key)||key.includes(k)) return PORT_COORDS[key];
   }
@@ -1909,7 +2053,15 @@ function loadExcel(ev){
         // Check for missing coords
         const missingCoords=[];
         VESSELS.slice(0,loaded).forEach(v=>v.ports.forEach(p=>{if(!p.lat||!p.lon)missingCoords.push(p.n);}));
-        const missingMsg=missingCoords.length?'\n⚠ Sin coordenadas: '+[...new Set(missingCoords)].join(', '):'';
+        let missingMsg=missingCoords.length?'\n⚠ Sin coordenadas: '+[...new Set(missingCoords)].join(', '):'';
+        if(window._ambiguousHits && window._ambiguousHits.length){
+          missingMsg += '\n🔀 Puertos homónimos (agrega sufijo de país en col C):\n   '
+                      + window._ambiguousHits.map(function(nn){
+                          var o=AMBIGUOUS_PORTS[portKey(nn)]||[];
+                          return nn+' → '+o.join(' / ');
+                        }).join('\n   ');
+          window._ambiguousHits=[];
+        }
         // Build summary message with costs
         const summaryLines=VESSELS.slice(0,loaded).map(v=>{
           const c=v.costs||{};
